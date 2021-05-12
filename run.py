@@ -36,49 +36,49 @@ if not os.path.exists(SAVE_PATH):   #if the folder doesn't exist, create it
 STATS_REPETS = 3                    #nb of repetition for statisitcs measures (mean, std)
 
 #Define base network and problem from scratch:
-# =============================================================================
-# #Learning parameters (see params.py)
-# learn_params = p.LearningParameters(training_steps_max=80000,
-#                                     batch_size=100,
-#                                     lr=0.1,
-#                                     wd=2e-4,
-#                                     alpha=2e-4,
-#                                     b_in_reg=False,
-#                                     h_div=True,
-#                                     lr_decay_at=[80,120,160],
-#                                     lr_decay=0.1,
-#                                     momentum=0.9)
-# 
-# #Hamiltonian parameters (see params.py)
-# ham_params = p.HamiltonianParameters(hamiltonianFunction="TwoLayersHam",
-#                                    n_blocks=6,
-#                                    ks=3,
-#                                    h=0.08,
-#                                    act="ReLU",
-#                                    init="Xavier")
-# 
-# #Network parameters (see params.py)
-# net_params = p.NetowrkParameters(hamParams=ham_params,
-#                                    nb_units=3,
-#                                    nb_features=list(map(int,[3, 32, 64, 112])),
-#                                    ks_conv=3,
-#                                    strd_conv=1,
-#                                    pd_conv=1,
-#                                    pooling="Avg",
-#                                    ks_pool=2,
-#                                    strd_pool=2,
-#                                    init="Xavier",
-#                                    second_final_FC=None,
-#                                    batchnorm_bool=False,
-#                                    both_border_pad=False,
-#                                    dropout=None)
-# =============================================================================
+#Learning parameters (see params.py)
+learn_params = p.LearningParameters(training_steps_max=80000,
+                                    batch_size=100,
+                                    lr=0.1,
+                                    wd=2e-4,
+                                    alpha=2e-4,
+                                    b_in_reg=False,
+                                    h_div=True,
+                                    lr_decay_at=[80,120,160],
+                                    lr_decay=0.1,
+                                    momentum=0.9)
+
+#Hamiltonian parameters (see params.py)
+ham_params = p.HamiltonianParameters(hamiltonianFunction="J1",
+                                   n_blocks=6,
+                                   ks=3,
+                                   h=0.08,
+                                   act="ReLU",
+                                   init="Xavier")
+
+#Network parameters (see params.py)
+net_params = p.NetowrkParameters(hamParams=ham_params,
+                                   nb_units=3,
+                                   nb_features=list(map(int,[3, 32, 64, 112])),
+                                   ks_conv=3,
+                                   strd_conv=1,
+                                   pd_conv=1,
+                                   pooling="Avg",
+                                   ks_pool=2,
+                                   strd_pool=2,
+                                   init="Xavier",
+                                   second_final_FC=None,
+                                   batchnorm_bool=False,
+                                   both_border_pad=False,
+                                   dropout=None)
 
 #Or import and modify prexisting problem
-learn_params = p.best_paper_learn_params
-ham_params = p.best_paper_ham_params
-net_params = p.best_paper_net_params
-#learn_params.lr = 0.01 #change init lr for example
+# =============================================================================
+# learn_params = p.best_paper_learn_params
+# ham_params = p.best_paper_ham_params
+# net_params = p.best_paper_net_params
+# #learn_params.lr = 0.01 #change init lr for example
+# =============================================================================
 
 # ----- Save the settings of the problem ----- #
 pickle.dump(learn_params, open(SAVE_PATH+"learn_params.pkl", "wb"))
@@ -94,9 +94,10 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 torch.set_num_threads(1)
 
 # ----- 2D grid search ----- #
-#Define the parameters (If you just want to test one set, just put the two grid values to the default value)
-params_names = ["Dropout","learning rate"]
-param1_values = [None]
+#Define the parameters along which apply a grid search
+#If no grid search just let intial parameters
+params_names = ["learning rate","learning rate"]
+param1_values = [learn_params.lr]
 param2_values = [learn_params.lr]
 
 #Save the grid search values
@@ -129,7 +130,7 @@ for i, param1 in enumerate(param1_values):
         #Update the parameters with the values
         print("New run with "+params_names[0]+" at "+str(param1_values[i])+" and with "\
               +params_names[1]+" at "+str(param2_values[j]))
-        net_params.dropout = param1_values[i]
+        learn_params.lr = param1_values[i]
         learn_params.lr = param2_values[j]
         
         #Compute the nb of epochs (may change during the grid search)

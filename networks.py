@@ -75,7 +75,7 @@ class Unit(nn.Module):
         return x
 
 class Network(nn.Module):
-    # Full network as presented in [2]: Conv -> n Units -> FC
+    # Full network as presented in [2]: Conv -> n Ham Units -> FC
     # Parameters
     #   net_params are the parameters of the network (see params.py)
     #   img_size is the size of the received image/data (side of the image, assumed square)
