@@ -116,7 +116,7 @@ best_paper_ham_params = HamiltonianParameters(hamiltonianFunction="TwoLayersHam"
                                    act="ReLU",
                                    init="Xavier")
 
-best_paper_net_params = NetowrkParameters(hamParams=paper_ham_params,
+best_paper_net_params = NetowrkParameters(hamParams=best_paper_ham_params,
                                    nb_units=3,
                                    nb_features=list(map(int,[3, 32, 64, 112])),
                                    ks_conv=3,
