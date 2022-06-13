@@ -14,32 +14,32 @@ Based on different papers:
 """
 
 # ----- Libraries ----- #
-#Pytorch
+# Pytorch
 import torch
-#Ours
+# Ours
 import params as p
 from train_and_test import train_and_test
-#Utils
+# Utils
 import numpy as np
 import os
 import pickle
 
 # ----- Define the base problem through parameters ----- #
-#Dataset
-DATASET = "CIFAR10"                 #choose btw "CIFAR100", "CIFAR10" and "STL10"
-NB_TRAIN_IMGS = 50000               #nb of images in the dataset
-#Utils
-STATS_REPETS = 1                    #nb of repetition for statisitcs measures (mean, std)
-SAVE_PATH = "data"+"/"              #save folder
-if not os.path.exists(SAVE_PATH):   #if the folder doesn't exist, create it
+# Dataset
+DATASET = "CIFAR10"  # choose btw "CIFAR100", "CIFAR10" and "STL10"
+NB_TRAIN_IMGS = 50000  # nb of images in the dataset
+# Utils
+STATS_REPETS = 1  # nb of repetition for statisitcs measures (mean, std)
+SAVE_PATH = "data"+"/"  # save folder
+if not os.path.exists(SAVE_PATH):  # if the folder doesn't exist, create it
     os.makedirs(SAVE_PATH)
 
-#Load the network, Hamiltonian and problem to run (from params.py)
+# Load the network, Hamiltonian and problem to run (from params.py)
 learn_params = p.best_paper_learn_params
 net_params = p.best_paper_net_params
 ham_params = net_params.hamParams
 
-#Or one can also create here a new one
+# Or one can also create here a new one
 # =============================================================================
 # best_paper_ham_params = p.HamiltonianParameters(hamiltonianFunction="TwoLayersHam",
 #                                    n_blocks=6,
@@ -47,7 +47,7 @@ ham_params = net_params.hamParams
 #                                    h=0.2,
 #                                    act="ReLU",
 #                                    init="Xavier")
-# 
+#
 # best_paper_net_params = p.NetowrkParameters(hamParams=best_paper_ham_params,
 #                                    nb_units=3,
 #                                    nb_features=list(map(int,[3, 32, 64, 112])),
@@ -62,7 +62,7 @@ ham_params = net_params.hamParams
 #                                    batchnorm_bool=True,
 #                                    both_border_pad=True,
 #                                    dropout=[0.1,0.2])
-# 
+#
 # best_paper_learn_params = p.LearningParameters(training_steps_max=80000,
 #                                     batch_size=100,
 #                                     lr=0.1,
@@ -91,14 +91,14 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 torch.set_num_threads(1)
 
 # ----- Grid search Parameters ----- #
-#Define the parameters along which apply a grid search
-#for a 1D grid search just iterate the second dimension through a fixed parameter 
-#for example param2_values = [learn_params.lr]
-params_names = ["batch size","learning rate"]
+# Define the parameters along which apply a grid search
+# for a 1D grid search just iterate the second dimension through a fixed parameter
+# for example param2_values = [learn_params.lr]
+params_names = ["batch size", "learning rate"]
 param1_values = [learn_params.batch_size]
 param2_values = [learn_params.lr]
 
-#Save the grid search values
+# Save the grid search values
 pickle.dump(params_names, open(SAVE_PATH+"params_names.pkl", "wb"))
 pickle.dump(param2_values, open(SAVE_PATH+"param2_values.pkl", "wb"))
 pickle.dump(param1_values, open(SAVE_PATH+"param1_values.pkl", "wb"))
@@ -119,7 +119,7 @@ print("Values of 1st param: "+str(param1_values))
 print("Values of 2nd param: "+str(param2_values))
 
 for i, param1 in enumerate(param1_values):
-    #Add a line
+    # Add a line
     train_acc.append([])
     test_acc.append([])
     train_loss.append([])
@@ -130,19 +130,19 @@ for i, param1 in enumerate(param1_values):
     test_loss_e.append([])
     for j, param2 in enumerate(param2_values):
         # ----- Update the network's parameters ----- #
-        print("New run with "+params_names[0]+" at "+str(param1_values[i])+" and with "\
-              +params_names[1]+" at "+str(param2_values[j]))
+        print("New run with "+params_names[0]+" at "+str(param1_values[i])+" and with "
+              + params_names[1]+" at "+str(param2_values[j]))
         learn_params.batch_size = param1_values[i]
         learn_params.lr = param2_values[j]
-        
-        #Update hamiltonian in the network (in case it has been modified by the grid)
+
+        # Update hamiltonian in the network (in case it has been modified by the grid)
         net_params.hamParams = ham_params
-        
-        #Compute the nb of epochs (may change during the grid search)
+
+        # Compute the nb of epochs (may change during the grid search)
         step_per_epoch = NB_TRAIN_IMGS/learn_params.batch_size
         epochs = int(learn_params.training_steps_max/step_per_epoch)
-        
-        #Temporary arrays
+
+        # Temporary arrays
         train_loss_e_tmp = np.zeros((STATS_REPETS, epochs))
         test_loss_e_tmp = np.zeros((STATS_REPETS, epochs))
         train_acc_e_tmp = np.zeros((STATS_REPETS, epochs))
@@ -151,16 +151,17 @@ for i, param1 in enumerate(param1_values):
         test_loss_tmp = np.zeros((STATS_REPETS))
         train_acc_tmp = np.zeros((STATS_REPETS))
         test_acc_tmp = np.zeros((STATS_REPETS))
-        
-        #Repeat for stats performance
+
+        # Repeat for stats performance
         for it in range(STATS_REPETS):
             print("Iteration "+str(it+1)+" over "+str(STATS_REPETS))
-            #Train and test the network 
-            train_loss_e_tmp[it,:], test_loss_e_tmp[it,:], train_acc_e_tmp[it,:], test_acc_e_tmp[it,:], \
+            # Train and test the network
+            train_loss_e_tmp[it, :], test_loss_e_tmp[it, :], train_acc_e_tmp[it, :], test_acc_e_tmp[it, :], \
                 train_loss_tmp[it], test_loss_tmp[it], train_acc_tmp[it], test_acc_tmp[it] = \
-                train_and_test(DATASET, net_params, learn_params, device, kwargs)
-            
-        #Add to tables
+                train_and_test(DATASET, net_params,
+                               learn_params, device, kwargs)
+
+        # Add to tables
         train_acc[i].append(train_acc_tmp)
         test_acc[i].append(test_acc_tmp)
         train_loss[i].append(train_loss_tmp)
@@ -169,15 +170,13 @@ for i, param1 in enumerate(param1_values):
         test_acc_e[i].append(test_acc_e_tmp)
         train_loss_e[i].append(train_loss_e_tmp)
         test_loss_e[i].append(test_loss_e_tmp)
-        
-        #Save after each combination for security in case it shut downs btw the end
-        pickle.dump(train_acc, open(SAVE_PATH+"train_acc.pkl", "wb" ))
-        pickle.dump(test_acc, open(SAVE_PATH+"test_acc.pkl", "wb" ))
-        pickle.dump(train_loss, open(SAVE_PATH+"train_loss.pkl", "wb" ))
-        pickle.dump(test_loss, open(SAVE_PATH+"test_loss.pkl", "wb" ))
-        pickle.dump(train_acc_e, open(SAVE_PATH+"train_acc_e.pkl", "wb" ))
-        pickle.dump(test_acc_e, open(SAVE_PATH+"test_acc_e.pkl", "wb" ))
-        pickle.dump(train_loss_e, open(SAVE_PATH+"train_loss_e.pkl", "wb" ))
-        pickle.dump(test_loss_e, open(SAVE_PATH+"test_loss_e.pkl", "wb" ))
-            
-    
+
+        # Save after each combination for security in case it shut downs btw the end
+        pickle.dump(train_acc, open(SAVE_PATH+"train_acc.pkl", "wb"))
+        pickle.dump(test_acc, open(SAVE_PATH+"test_acc.pkl", "wb"))
+        pickle.dump(train_loss, open(SAVE_PATH+"train_loss.pkl", "wb"))
+        pickle.dump(test_loss, open(SAVE_PATH+"test_loss.pkl", "wb"))
+        pickle.dump(train_acc_e, open(SAVE_PATH+"train_acc_e.pkl", "wb"))
+        pickle.dump(test_acc_e, open(SAVE_PATH+"test_acc_e.pkl", "wb"))
+        pickle.dump(train_loss_e, open(SAVE_PATH+"train_loss_e.pkl", "wb"))
+        pickle.dump(test_loss_e, open(SAVE_PATH+"test_loss_e.pkl", "wb"))
