@@ -3,11 +3,11 @@
 Generates CIFAR10, CIFAR100 and STL10 datasets with the preprocessing steps presented in [2]
 
 Based on different papers:
-    [1] Stable architectures for deep neural networks. 
+    [1] Stable architectures for deep neural networks.
         Eldab Haber and Lars Ruthotto, 2017
-    [2] Reversible Architectures for Arbitrarily Deep Residual Neural Networks. 
+    [2] Reversible Architectures for Arbitrarily Deep Residual Neural Networks.
         Bo Chang, Lili Meng et al., 2018
-    [3] A unified framework for Hamiltonian deep neural networks. 
+    [3] A unified framework for Hamiltonian deep neural networks.
         Clara Galimberti, Liang Xu and Giancarlo Ferrari Trecate, 2021
 """
 
@@ -47,6 +47,18 @@ PROBA_FLIP = 0.5  # proba to flip the image
 # ----- Functions ----- #
 
 
+class AddGaussianNoise(object):
+    def __init__(self, mean=0., std=1.):
+        self.std = std
+        self.mean = mean
+
+    def __call__(self, tensor):
+        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
+
+
 def CIFAR_dataset(dataset, path, batch_size, crop_and_flip, kwargs):
     # Return the loader for the selected preprocessed CIFAR dataset and informations about the dataset
     # Parameters:
@@ -75,6 +87,13 @@ def CIFAR_dataset(dataset, path, batch_size, crop_and_flip, kwargs):
         transforms.ToTensor(),
         transforms.Normalize(CIFAR_MEAN_VALS, CIFAR_STD_VALS)
     ])
+
+    preprocess_noisy_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(CIFAR_MEAN_VALS, CIFAR_STD_VALS),
+        AddGaussianNoise(mean=0., std=2)
+    ])
+
     # if cropping and flipping disabled -> use the test transformation for the training
     if crop_and_flip == False:
         preprocess_train = preprocess_test
@@ -89,6 +108,10 @@ def CIFAR_dataset(dataset, path, batch_size, crop_and_flip, kwargs):
             datasets.CIFAR10('../data', train=False,
                              transform=preprocess_test),
             batch_size=batch_size, shuffle=True, **kwargs)
+
+        noisy_test_dataloader = torch.utils.data.DataLoader(datasets.CIFAR10(
+            '../data', train=False, transform=preprocess_noisy_test), batch_size=batch_size, shuffle=True, **kwargs)
+
         n_labels = CIFAR10_n_labels
 
     elif dataset == "CIFAR100":
@@ -99,13 +122,15 @@ def CIFAR_dataset(dataset, path, batch_size, crop_and_flip, kwargs):
         test_loader = torch.utils.data.DataLoader(
             datasets.CIFAR100('../data', train=False,
                               transform=preprocess_test),
-            batch_size=batch_size, shuffle=True, **kwargs)
+            batch_size=batch_size, shuffle=True, **kwargs),
+        noisy_test_dataloader = torch.utils.data.DataLoader(datasets.CIFAR100(
+            '../data', train=False, transform=preprocess_noisy_test), batch_size=batch_size, shuffle=True, **kwargs)
         n_labels = CIFAR100_n_labels
 
     else:
         sys.exit("This dataset is unavailible (datasets.py)\n")
 
-    return train_loader, test_loader, CIFAR_SIZE, n_labels, CIFAR_NB_TRAIN
+    return train_loader, test_loader, noisy_test_dataloader, CIFAR_SIZE, n_labels, CIFAR_NB_TRAIN
 
 
 def STL10_dataset(path, batch_size, crop_and_flip, kwargs):

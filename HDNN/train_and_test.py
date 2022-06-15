@@ -57,7 +57,7 @@ def train(epoch, model, optimizer, criterion, train_loader, learn_param, net_par
         loss = criterion(output ,target).to(device)
 
         #add regularisation term
-        loss += compute_reg(model, net_params, learn_param, device)
+        # loss += compute_reg(model, net_params, learn_param, device)
         
         #verify that there is no NaN or infinte loss -> if it is the case quit and return True 
         if int((output != output).sum()) > 0:

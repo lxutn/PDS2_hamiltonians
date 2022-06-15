@@ -18,7 +18,7 @@ import torch.nn.functional as F
 # Utils
 import sys
 # Ours
-from hamiltonians import TwoLayerHamiltonian, eHamiltonian
+from hamiltonians import eHamiltonian
 from utils import initWeights
 
 # ----- Network units declaration ----- #
@@ -43,13 +43,7 @@ class Unit(nn.Module):
         ham_params = net_params.hamParams
 
         # Hamiltonian
-        if ham_params.hamiltonianFunction == "J2" or ham_params.hamiltonianFunction == "J1":
-            self.baseUnit = eHamiltonian(ham_params, n_f_in, img_size, device)
-        elif ham_params.hamiltonianFunction == "TwoLayersHam":
-            self.baseUnit = TwoLayerHamiltonian(
-                ham_params, n_f_in, img_size, device)
-        else:
-            sys.exit("This hamiltonian is not available (networks.py)")
+        self.baseUnit = eHamiltonian(ham_params, n_f_in, img_size, device)
 
         # Pooling
         if net_params.pooling == "Avg":
