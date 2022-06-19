@@ -18,7 +18,6 @@ Based on different papers:
 import torch
 # Ours
 import params as p
-from train_and_test import train_and_test
 # Utils
 import numpy as np
 import os
